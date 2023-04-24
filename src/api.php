@@ -35,7 +35,7 @@ class MailmanAPI {
 	/**
 	 * Return Array of all Members in a Mailman List
 	 */
-	public function getMemberlist() {
+	public function getMemberlist($getNames = false) {
 
 		$response = $this->client->request('GET', $this->mailmanURL . '/members');
 
@@ -53,7 +53,7 @@ class MailmanAPI {
 		$memberList = array();
 
 		if (count($links) === 0) {
-			return $this->getMembersFromTableRows($trs, $isSinglePage = true);
+			return $this->getMembersFromTableRows($trs, $isSinglePage = true, $getNames);
 		}
 
 		$urlsForLetters = array();
@@ -80,7 +80,7 @@ class MailmanAPI {
 
 			$memberList = array_merge(
 				$memberList,
-				$this->getMembersFromTableRows($trs)
+				$this->getMembersFromTableRows($trs, $isSinglePage = false, $getNames)
 			);
 		}
 
@@ -95,7 +95,7 @@ class MailmanAPI {
 	 *
 	 * @return array
 	 */
-	protected function getMembersFromTableRows($trs, $isSinglePage = false)
+	protected function getMembersFromTableRows($trs, $isSinglePage = false, $getNames = false)
 	{
 		$firstRowIndex = $isSinglePage ? 2 : 3;
 
@@ -103,7 +103,11 @@ class MailmanAPI {
 
 		for ($i = $firstRowIndex; $i < $trs->length; $i++) {
 			$tds = $trs[$i]->getElementsByTagName("td");
-			$memberList[] = $tds[1]->nodeValue;
+			if ($getNames) {
+				$memberList[] = $tds[1]->getElementsByTagName("input")[0]->getAttribute("value");
+			} else {
+				$memberList[] = $tds[1]->nodeValue;
+			}
 		}
 
 		return $memberList;
